@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kulay Bilang: Sorting Jam | Project KABULIG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F4B;
+    --gold:#D4A017;
+    --wood:#8B6A46;
+    --wood-dark:#6E5236;
+    --counter:#EADFC8;
+    --green:#7CB342; --green-d:#598A2A;
+    --brown:#6F4E37; --brown-d:#4E362A;
+    --peach:#E8A87C; --peach-d:#C87E4E;
+    --blue:#4FA8DA;  --blue-d:#2F7FAE;
+    --ink:#2B2117;
+    --paper:#FBF6EC;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:var(--navy);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    background:var(--counter);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* ===== HEADER ===== */
+  header{
+    background:var(--navy);
+    color:#fff;
+    padding:14px 16px 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-family:'Fredoka',sans-serif;
+    z-index:6;
+    position:relative;
+  }
+  header .brand{
+    font-size:13px; letter-spacing:.06em; opacity:.75;
+    font-family:'Nunito',sans-serif; font-weight:700; text-transform:uppercase;
+  }
+  header h1{ margin:2px 0 0; font-size:19px; font-weight:600; }
+  .stat-pill{
+    background:var(--gold); color:var(--navy); border-radius:999px;
+    padding:6px 14px; font-weight:700; font-size:14px; text-align:center; line-height:1.1;
+    box-shadow:0 2px 0 rgba(0,0,0,.15);
+  }
+  .stat-pill small{display:block;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75;}
+  .subbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 16px; background:#0e2657; color:#fff; font-size:13px; font-weight:700;
+    position:relative; z-index:6;
+  }
+  .subbar span.level{color:var(--gold);}
+
+  /* ===== DECORATIVE CONVEYOR BACKGROUND ===== */
+  .deco-conveyor{
+    position:relative;
+    height:210px;
+    background:linear-gradient(180deg,#D9CBA8,#EADFC8);
+    overflow:hidden;
+    border-bottom:3px solid #C9B98C;
+  }
+  .deco-row{
+    display:flex;
+    gap:12px;
+    width:max-content;
+    position:absolute;
+    left:0;
+    opacity:.55;
+    filter:saturate(.75);
+  }
+  .deco-row .cup{ width:26px; height:32px; }
+  .deco-row.r1{ top:2px;   animation:scrollL 13s linear infinite; }
+  .deco-row.r2{ top:38px;  animation:scrollR 16s linear infinite; }
+  .deco-row.r3{ top:74px;  animation:scrollL 19s linear infinite; }
+  .deco-row.r4{ top:110px; animation:scrollR 15s linear infinite; }
+  .deco-row.r5{ top:146px; animation:scrollL 21s linear infinite; }
+  @keyframes scrollL{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  @keyframes scrollR{ from{transform:translateX(-50%);} to{transform:translateX(0);} }
+
+  /* ===== INSTRUCTION ===== */
+  .instruction{
+    padding:10px 14px 4px;
+    font-family:'Fredoka',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--wood-dark);
+    background:var(--paper);
+  }
+
+  /* ===== ACTIVE DOCK (real queue) ===== */
+  .dock-wrap{
+    background:var(--paper);
+    padding:6px 12px 16px;
+    border-bottom:3px dashed #D8CCAE;
+  }
+  .dock-arrow{
+    font-size:11px;
+    color:#a89468;
+    font-weight:800;
+    margin-bottom:4px;
+    letter-spacing:.04em;
+  }
+  .dock{
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    min-height:62px;
+    padding:4px 4px 2px;
+    overflow-x:auto;
+  }
+  .dock-empty{
+    font-size:13px; color:#9c8d6e; font-weight:700; padding:16px 0;
+  }
+  .dock-slot{
+    display:flex; flex-direction:column; align-items:center; gap:3px; flex-shrink:0;
+  }
+  .run-badge{
+    background:var(--gold); color:var(--navy);
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:11px;
+    border-radius:50%; width:18px; height:18px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .dock-slot.in-run .cup{
+    outline:3px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  /* ===== CUP SHAPE ===== */
+  .cup{
+    width:36px; height:44px;
+    position:relative;
+    flex-shrink:0;
+  }
+  .cup.no-photo{
+    clip-path:polygon(14% 0%, 86% 0%, 100% 100%, 0% 100%);
+  }
+  .cup.no-photo::after{
+    content:""; position:absolute; top:0;left:0;right:0; height:6px;
+    background:rgba(255,255,255,.55);
+    clip-path:polygon(14% 0, 86% 0, 80% 100%, 20% 100%);
+  }
+  .cup.no-photo.green{background:linear-gradient(180deg,#98D050,var(--green));}
+  .cup.no-photo.brown{background:linear-gradient(180deg,#8A6349,var(--brown));}
+  .cup.no-photo.peach{background:linear-gradient(180deg,#F3C39B,var(--peach));}
+  .cup.no-photo.blue{background:linear-gradient(180deg,#78C4EA,var(--blue));}
+  .cup img.realistic{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:contain; pointer-events:none;
+  }
+
+  /* ===== SORTING BOARD (tiled color-coded zones) ===== */
+  .board-wrap{
+    flex:1;
+    background:var(--wood);
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    box-shadow:inset 0 6px 10px -6px rgba(0,0,0,.35);
+  }
+  .board-label{
+    color:#f0e3c0;
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:12px;
+    text-align:center;
+    margin-bottom:8px;
+  }
+  .board{
+    flex:1;
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    grid-template-rows:repeat(4, 1fr);
+    gap:5px;
+    min-height:220px;
+  }
+  .zone{
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 3px 0 rgba(0,0,0,.25);
+    transition:transform .12s ease, outline-color .2s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .zone:active{ transform:scale(.96); }
+  .zone img.realistic{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; opacity:.85; z-index:0;
+  }
+  .zone .holes{ display:flex; flex-wrap:wrap; gap:4px; justify-content:center; position:relative; z-index:1; }
+  .zone .hole-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:rgba(255,255,255,.25);
+    border:1.5px solid rgba(255,255,255,.5);
+  }
+  .zone .cap-tag{
+    position:absolute; top:3px; left:5px;
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:11px;
+    color:rgba(255,255,255,.85); z-index:1;
+  }
+  .zone.green{ background:linear-gradient(160deg,#98D050,var(--green-d)); }
+  .zone.brown{ background:linear-gradient(160deg,#8A6349,var(--brown-d)); }
+  .zone.peach{ background:linear-gradient(160deg,#F3C39B,var(--peach-d)); }
+  .zone.blue{ background:linear-gradient(160deg,#78C4EA,var(--blue-d)); }
+  .zone.ready{ outline:3px solid var(--gold); }
+  .zone.pop{ animation:zonepop .4s ease; }
+  @keyframes zonepop{ 0%{transform:scale(1);} 45%{transform:scale(1.1);} 100%{transform:scale(1);} }
+  .zone.shake{ animation:shaketray .35s; }
+  @keyframes shaketray{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+
+  .feedback{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(.8);
+    background:rgba(11,31,75,.95); color:#fff; padding:16px 26px; border-radius:16px;
+    font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; text-align:center;
+    z-index:50; opacity:0; pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease; max-width:80%;
+  }
+  .feedback.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+  .winscreen{
+    position:fixed; inset:0; background:rgba(11,31,75,.92);
+    display:none; align-items:center; justify-content:center; z-index:60;
+    flex-direction:column; text-align:center; color:#fff; padding:20px;
+  }
+  .winscreen.show{display:flex;}
+  .winscreen h2{font-family:'Fredoka',sans-serif;font-size:28px;color:var(--gold);margin:0 0 8px;}
+  .winscreen p{font-size:15px;margin:0 0 20px;opacity:.9;}
+  .winscreen button{
+    background:var(--gold); color:var(--navy); border:none;
+    font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px;
+    padding:12px 28px; border-radius:999px; cursor:pointer;
+  }
+  footer.credit{
+    text-align:center; font-size:10px; color:#9c8d6e; padding:6px 0 10px; background:var(--wood);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div>
+      <div class="brand">Project KABULIG · Numero</div>
+      <h1>Kulay Bilang: Sorting Jam</h1>
+    </div>
+    <div class="stat-pill"><small>Puntos</small><span id="scoreVal">0</span></div>
+  </header>
+
+  <div class="subbar">
+    <span>Antas <span class="level" id="levelVal">1</span></span>
+    <span id="cupsLeftVal">60 tasang natitira</span>
+  </div>
+
+  <div class="deco-conveyor" id="decoConveyor"></div>
+
+  <div class="instruction">👀 Hanapin ang <b>magkasunod na parehong kulay</b> kahit saan sa pila — pindutin ang tray na tumutugma sa bilang para sahurin!</div>
+
+  <div class="dock-wrap">
+    <div class="dock-arrow">⬅ UNA SA PILA &nbsp;·&nbsp; DULO ➜</div>
+    <div class="dock" id="dock">
+      <div class="dock-empty">Naghihintay ng tasa...</div>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board-label">🎯 Pindutin ang kahong may tugmang kulay at bilang</div>
+    <div class="board" id="board"></div>
+  </div>
+  <footer class="credit">Project KABULIG — Sanayang Pagbilang at Pagbukud-bukod (K-3)</footer>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<div class="winscreen" id="winscreen">
+  <h2>🎉 Magaling!</h2>
+  <p id="winText">Natapos mo ang antas na ito!</p>
+  <button onclick="nextLevel()">Susunod na Antas</button>
+</div>
+
+<script>
+const COLORS = [
+  {key:'green', word:'Berde'},
+  {key:'brown', word:'Kape'},
+  {key:'peach', word:'Kulay-rosas'},
+  {key:'blue',  word:'Asul'}
+];
+
+const ASSET_BASE = 'assets/'; // point this to your GitHub Pages assets folder once hosted
+
+// Fixed tiling of a 6-col x 4-row board, no gaps/overlaps. Sizes vary (2,4,4,6,8)
+// like the reference game's mixed-size trays.
+const ZONE_LAYOUT = [
+  {id:'z1', col:0, row:0, w:2, h:4, cap:8},
+  {id:'z2', col:2, row:0, w:3, h:2, cap:6},
+  {id:'z3', col:5, row:0, w:1, h:4, cap:4},
+  {id:'z4', col:2, row:2, w:2, h:2, cap:4},
+  {id:'z5', col:4, row:2, w:1, h:2, cap:2}
+];
+
+let state = {
+  score:0,
+  level:1,
+  totalTarget:60,
+  spawned:0,
+  scooped:0,
+  dock:[],
+  zones:[],
+  spawnTimer:null
+};
+const MAX_DOCK = 12;
+const SPAWN_MS = 1300;
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function colorWord(key){ const c=COLORS.find(c=>c.key===key); return c?c.word:key; }
+
+/* ---------- decorative background rows ---------- */
+function buildDeco(){
+  const wrap = document.getElementById('decoConveyor');
+  wrap.innerHTML = '';
+  ['r1','r2','r3','r4','r5'].forEach(cls=>{
+    const row = document.createElement('div');
+    row.className = 'deco-row ' + cls;
+    let html = '';
+    for(let rep=0; rep<2; rep++){
+      for(let i=0;i<16;i++){
+        const c = COLORS[randInt(0,COLORS.length-1)].key;
+        html += '<div class="cup no-photo '+c+'"></div>';
+      }
+    }
+    row.innerHTML = html;
+    wrap.appendChild(row);
+  });
+}
+
+/* ---------- level lifecycle ---------- */
+function initLevel(){
+  state.totalTarget = 40 + state.level*10;
+  state.spawned = 0;
+  state.scooped = 0;
+  state.dock = [];
+  initZones();
+  for(let i=0;i<6;i++) spawnCup();
+  render();
+  if(state.spawnTimer) clearInterval(state.spawnTimer);
+  state.spawnTimer = setInterval(spawnTick, SPAWN_MS);
+}
+
+function spawnCup(){
+  if(state.spawned >= state.totalTarget) return false;
+  if(state.dock.length >= MAX_DOCK) return false;
+  let colorKey;
+  const last = state.dock[state.dock.length-1];
+  if(last && Math.random() < 0.4){
+    colorKey = last.color; // biased repeat so consecutive groups form often
+  } else {
+    colorKey = COLORS[randInt(0,COLORS.length-1)].key;
+  }
+  state.dock.push({id:uid(), color:colorKey});
+  state.spawned++;
+  return true;
+}
+
+function spawnTick(){
+  const added = spawnCup();
+  if(added) renderDock();
+  updateStats();
+}
+
+function initZones(){
+  state.zones = ZONE_LAYOUT.map(z => ({...z, color: randomColor()}));
+}
+function randomColor(){ return COLORS[randInt(0,COLORS.length-1)].key; }
+
+/* ---------- render ---------- */
+function render(){
+  updateStats();
+  renderDock();
+  renderBoard();
+}
+
+function updateStats(){
+  document.getElementById('scoreVal').textContent = state.score;
+  document.getElementById('levelVal').textContent = state.level;
+  const left = state.totalTarget - state.scooped;
+  document.getElementById('cupsLeftVal').textContent = left + ' tasang natitira';
+}
+
+function computeRuns(){
+  const runs = [];
+  let i = 0;
+  while(i < state.dock.length){
+    let j = i;
+    while(j < state.dock.length && state.dock[j].color === state.dock[i].color) j++;
+    runs.push({start:i, end:j, length:j-i, color:state.dock[i].color});
+    i = j;
+  }
+  return runs;
+}
+
+function findRunForZone(color, cap){
+  const runs = computeRuns();
+  for(const run of runs){ if(run.color===color && run.length >= cap) return run; }
+  return null;
+}
+
+function renderDock(){
+  const dockEl = document.getElementById('dock');
+  const firstRects = {};
+  Array.from(dockEl.children).forEach(el=>{
+    if(el.dataset.id) firstRects[el.dataset.id] = el.getBoundingClientRect();
+  });
+
+  const runs = computeRuns();
+
+  dockEl.innerHTML = '';
+  if(state.dock.length===0){
+    dockEl.innerHTML = '<div class="dock-empty">Naghihintay ng tasa...</div>';
+  }
+  state.dock.forEach((cup,idx)=>{
+    const run = runs.find(r=>idx>=r.start && idx<r.end);
+    const posInRun = idx - run.start + 1;
+    const wrap = document.createElement('div');
+    wrap.className = 'dock-slot in-run';
+    wrap.dataset.id = cup.id;
+    const badge = document.createElement('div');
+    badge.className = 'run-badge';
+    badge.textContent = posInRun;
+    wrap.appendChild(badge);
+    const c = document.createElement('div');
+    c.className = 'cup no-photo ' + cup.color;
+    const img = document.createElement('img');
+    img.className = 'realistic';
+    img.src = ASSET_BASE + 'cups/cup-' + cup.color + '.png';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.onload = function(){ c.classList.remove('no-photo'); };
+    img.onerror = function(){ this.remove(); };
+    c.appendChild(img);
+    wrap.appendChild(c);
+    dockEl.appendChild(wrap);
+  });
+
+  Array.from(dockEl.children).forEach(el=>{
+    if(!el.dataset.id) return;
+    const first = firstRects[el.dataset.id];
+    if(first){
+      const last = el.getBoundingClientRect();
+      const dx = first.left - last.left;
+      if(dx){
+        el.style.transform = `translateX(${dx}px)`;
+        el.style.transition = 'transform 0s';
+        requestAnimationFrame(()=>{
+          el.style.transition = 'transform .45s ease';
+          el.style.transform = 'translateX(0)';
+        });
+      }
+    } else {
+      el.style.transform = 'translateX(30px)';
+      el.style.opacity = '0';
+      requestAnimationFrame(()=>{
+        el.style.transition = 'transform .35s ease, opacity .35s ease';
+        el.style.transform = 'translateX(0)';
+        el.style.opacity = '1';
+      });
+    }
+  });
+
+  highlightReadyZones();
+}
+
+function renderBoard(){
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  state.zones.forEach(zone=>{
+    const z = document.createElement('div');
+    z.className = 'zone ' + zone.color;
+    z.id = 'zone-'+zone.id;
+    z.style.gridColumn = (zone.col+1) + ' / span ' + zone.w;
+    z.style.gridRow = (zone.row+1) + ' / span ' + zone.h;
+    z.onclick = ()=>submitToZone(zone.id);
+
+    const img = document.createElement('img');
+    img.className = 'realistic';
+    img.src = ASSET_BASE + 'trays/tray-' + zone.cap + '.png';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.onerror = function(){ this.remove(); };
+    z.appendChild(img);
+
+    const tag = document.createElement('div');
+    tag.className = 'cap-tag';
+    tag.textContent = zone.cap;
+    z.appendChild(tag);
+
+    const holes = document.createElement('div');
+    holes.className = 'holes';
+    for(let i=0;i<zone.cap;i++){
+      const dot = document.createElement('div');
+      dot.className = 'hole-dot';
+      holes.appendChild(dot);
+    }
+    z.appendChild(holes);
+    boardEl.appendChild(z);
+  });
+  highlightReadyZones();
+}
+
+function highlightReadyZones(){
+  const runs = computeRuns();
+  state.zones.forEach(zone=>{
+    const el = document.getElementById('zone-'+zone.id);
+    if(!el) return;
+    const hasMatch = runs.some(r=>r.color===zone.color && r.length>=zone.cap);
+    el.classList.toggle('ready', hasMatch);
+  });
+}
+
+/* ---------- game actions ---------- */
+function submitToZone(zoneId){
+  const zone = state.zones.find(z=>z.id===zoneId);
+  if(!zone) return;
+  const zoneEl = document.getElementById('zone-'+zoneId);
+
+  if(state.dock.length===0){
+    flash('Wala pang tasang dumarating, maghintay lang.');
+    return;
+  }
+
+  const run = findRunForZone(zone.color, zone.cap);
+
+  if(run){
+    state.dock.splice(run.start, zone.cap);
+    state.score += zone.cap * 10;
+    state.scooped += zone.cap;
+    zoneEl.classList.add('pop');
+    flash('Tama! '+zone.cap+' na tasa ng '+colorWord(zone.color)+' = kahong '+zone.cap+'! +'+(zone.cap*10)+' puntos');
+    setTimeout(()=>{
+      zone.color = randomColor();
+      renderBoard();
+      renderDock();
+      updateStats();
+      if(state.scooped >= state.totalTarget){
+        clearInterval(state.spawnTimer);
+        showWin();
+      }
+    }, 420);
+  } else {
+    zoneEl.classList.add('shake');
+    setTimeout(()=>zoneEl.classList.remove('shake'), 350);
+    const runsOfColor = computeRuns().filter(r=>r.color===zone.color);
+    const longestOfColor = runsOfColor.reduce((m,r)=>Math.max(m,r.length),0);
+    if(longestOfColor===0){
+      flash('Kailangan ng '+colorWord(zone.color)+' na tasa dito, wala pa sa pila.');
+    } else {
+      flash('Kulang pa. Kailangan ng '+zone.cap+' magkasunod na '+colorWord(zone.color)+', meron pa lang '+longestOfColor+'.');
+    }
+  }
+}
+
+let flashTimer;
+function flash(msg){
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>el.classList.remove('show'), 1600);
+}
+
+function showWin(){
+  document.getElementById('winText').textContent =
+    'Nabilang at na-sort mo ang lahat ng tasa sa Antas '+state.level+'! Puntos: '+state.score;
+  document.getElementById('winscreen').classList.add('show');
+}
+
+function nextLevel(){
+  document.getElementById('winscreen').classList.remove('show');
+  state.level += 1;
+  initLevel();
+}
+
+buildDeco();
+initLevel();
+</script>
+</body>
+</html>
